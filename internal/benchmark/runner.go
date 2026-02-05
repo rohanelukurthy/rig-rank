@@ -38,7 +38,7 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Atomic Check...")
 	}
-	atomicStats, err := r.runProfile(modelName, ProfileConfig{
+	atomicStats, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 32, Output: 16, Name: "Atomic Check", Iterations: 5,
 		Prompt: "What is the capital of France? Answer in one word.",
 	})
@@ -51,7 +51,7 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Code Generation...")
 	}
-	codeStats, err := r.runProfile(modelName, ProfileConfig{
+	codeStats, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 80, Output: 256, Name: "Code Generation", Iterations: 5,
 		Prompt: "Write a Python function to find the second largest element in a list.",
 	})
@@ -64,7 +64,7 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Story Generation...")
 	}
-	storyStats, err := r.runProfile(modelName, ProfileConfig{
+	storyStats, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 50, Output: 400, Name: "Story Generation", Iterations: 5,
 		Prompt: "Write a short story about a robot who discovers nature.",
 	})
@@ -77,7 +77,7 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Summarization...")
 	}
-	summStats, err := r.runProfile(modelName, ProfileConfig{
+	summStats, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 2048, Output: 128, Name: "Summarization", Iterations: 5,
 		Prompt: generateDummyText(2048) + " Summarize the above.",
 	})
@@ -90,7 +90,7 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Reasoning...")
 	}
-	reasonStats, err := r.runProfile(modelName, ProfileConfig{
+	reasonStats, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 100, Output: 150, Name: "Reasoning", Iterations: 5,
 		Prompt: "Solve this math problem step by step: If x=2 and y=3, what is 2x + 3y?",
 	})
@@ -110,7 +110,7 @@ type ProfileConfig struct {
 	Prompt     string
 }
 
-func (r *Runner) runProfile(model string, cfg ProfileConfig) (*models.ProfileStats, error) {
+func (r *Runner) RunProfile(model string, cfg ProfileConfig) (*models.ProfileStats, error) {
 	// Warmup
 	if r.Debug {
 		fmt.Printf("[DEBUG] Warmup (1 iteration)...\n")
