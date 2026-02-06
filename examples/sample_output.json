@@ -1,0 +1,175 @@
+{
+    "system_info": {
+        "arch": "arm64",
+        "cpu": {
+            "model": "Apple M2",
+            "cores_physical": 8,
+            "cores_logical": 8,
+            "frequency_max_mhz": 3504
+        },
+        "gpu": {
+            "model": "Apple M2",
+            "vram_total_mb": 0,
+            "pcie_gen": "",
+            "pcie_lanes": 0
+        },
+        "ram": {
+            "total_mb": 16384,
+            "type": "LPDDR5",
+            "speed_mts": 0
+        }
+    },
+    "inference_results": {
+        "metrics_version": "1.0",
+        "model_metadata": {
+            "name": "gemma3:1b",
+            "quantization": "",
+            "size_mb": 0
+        },
+        "benchmarks": {
+            "atomic": {
+                "description": "Atomic Check",
+                "config": {
+                    "input_tokens": 32,
+                    "output_tokens": 16
+                },
+                "stats": {
+                    "ttft_ms": {
+                        "mean": 343.2,
+                        "median": 323,
+                        "p99": 406
+                    },
+                    "gen_tps": {
+                        "mean": 90.52,
+                        "median": 79.67,
+                        "p99": 109.42
+                    },
+                    "prompt_tps": {
+                        "mean": 690.87,
+                        "median": 622.58,
+                        "p99": 1089.60
+                    }
+                }
+            },
+            "code_gen": {
+                "description": "Code Generation",
+                "config": {
+                    "input_tokens": 80,
+                    "output_tokens": 256
+                },
+                "stats": {
+                    "ttft_ms": {
+                        "mean": 579,
+                        "median": 522,
+                        "p99": 752
+                    },
+                    "gen_tps": {
+                        "mean": 22.97,
+                        "median": 22.03,
+                        "p99": 25.56
+                    },
+                    "prompt_tps": {
+                        "mean": 853.83,
+                        "median": 748.02,
+                        "p99": 1183.82
+                    }
+                }
+            },
+            "story_gen": {
+                "description": "Story Generation",
+                "config": {
+                    "input_tokens": 50,
+                    "output_tokens": 400
+                },
+                "stats": {
+                    "ttft_ms": {
+                        "mean": 624.2,
+                        "median": 629,
+                        "p99": 634
+                    },
+                    "gen_tps": {
+                        "mean": 25.10,
+                        "median": 25.32,
+                        "p99": 26.09
+                    },
+                    "prompt_tps": {
+                        "mean": 681.88,
+                        "median": 625.81,
+                        "p99": 953.64
+                    }
+                }
+            },
+            "summarization": {
+                "description": "Summarization",
+                "config": {
+                    "input_tokens": 2048,
+                    "output_tokens": 128
+                },
+                "stats": {
+                    "ttft_ms": {
+                        "mean": 732.4,
+                        "median": 435,
+                        "p99": 1921
+                    },
+                    "gen_tps": {
+                        "mean": 22.01,
+                        "median": 21.31,
+                        "p99": 25.21
+                    },
+                    "prompt_tps": {
+                        "mean": 12578.58,
+                        "median": 529.35,
+                        "p99": 60721.21
+                    }
+                }
+            },
+            "reasoning": {
+                "description": "Reasoning",
+                "config": {
+                    "input_tokens": 100,
+                    "output_tokens": 150
+                },
+                "stats": {
+                    "ttft_ms": {
+                        "mean": 495,
+                        "median": 477,
+                        "p99": 680
+                    },
+                    "gen_tps": {
+                        "mean": 20.63,
+                        "median": 20.81,
+                        "p99": 21.98
+                    },
+                    "prompt_tps": {
+                        "mean": 1441.29,
+                        "median": 1561.25,
+                        "p99": 1746.35
+                    }
+                }
+            }
+        }
+    },
+    "use_case_suitability": {
+        "quick_qa": {
+            "rating": "POOR",
+            "reason": "TTFT of 343.2ms is sluggish."
+        },
+        "coding": {
+            "rating": "GOOD",
+            "reason": "Generation speed of 23.0 t/s is usable."
+        },
+        "writing": {
+            "rating": "GOOD",
+            "reason": "Speed of 25.1 t/s is okay."
+        },
+        "summarization": {
+            "rating": "EXCELLENT",
+            "reason": "Ingestion speed of 12578.6 t/s is fast."
+        },
+        "data_analysis": {
+            "rating": "POOR",
+            "reason": "Complex gen speed of 20.6 t/s is low."
+        },
+        "overall_verdict": "This model is suitable for most tasks, but may struggle with some heavy workloads."
+    }
+}

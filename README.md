@@ -57,20 +57,29 @@ Ensure Ollama is running (`ollama serve`), then run the benchmark suite:
 
 ## 📊 Output Example
 
-```json
-{
-  "system_info": {
-    "arch": "arm64",
-    "cpu": { "model": "Apple M2 Max", "cores_physical": 12 },
-    "ram": { "total_mb": 32768, "type": "LPDDR5", "speed_mts": 6400 }
-  },
-  "benchmarks": {
-    "atomic": {
-      "stats": { "ttft_ms": { "mean": 12.5, "p99": 15.2 } }
-    }
-  }
-}
+RigRank displays a human-friendly **Report Card** followed by detailed JSON metrics:
+
 ```
+  📊 Model Report Card: gemma3:1b
+
+  ┌────────────────────────────────────────────────────────────────────┐
+  │  Benchmark       Startup      Writing Speed    Reading Speed      │
+  │                  (first word) (output)         (input)            │
+  ├────────────────────────────────────────────────────────────────────┤
+  │  Atomic Check    343ms        ~70 words/sec    ~531 words/sec     │
+  │  Code Gen        579ms        ~18 words/sec    ~657 words/sec     │
+  │  Story Gen       624ms        ~19 words/sec    ~525 words/sec     │
+  │  Summarization   732ms        ~17 words/sec    ~9.7k words/sec    │
+  │  Reasoning       495ms        ~16 words/sec    ~1.1k words/sec    │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ✅ Writing Speed: Excellent across all tasks.
+  ⚠️  Startup: Noticeable pause before responses begin.
+
+  This model is suitable for most tasks, but may struggle with some heavy workloads.
+```
+
+For the full JSON output schema, see [`examples/sample_output.json`](./examples/sample_output.json).
 
 ## 📈 Understanding the Metrics
 
