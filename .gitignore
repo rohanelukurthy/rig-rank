@@ -1,6 +1,7 @@
 # Binaries
 build/
-rigrank
+/rigrank
+!cmd/rigrank/
 *.exe
 *.test
 
