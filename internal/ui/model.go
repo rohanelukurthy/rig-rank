@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/rohanelukurthy/rig-rank/internal/benchmark"
 	"github.com/rohanelukurthy/rig-rank/internal/models"
+	"github.com/rohanelukurthy/rig-rank/internal/scoring"
 	"github.com/rohanelukurthy/rig-rank/internal/telemetry"
 )
 
@@ -46,12 +47,18 @@ type Model struct {
 	// Errors
 	err error
 
+	// Config
+	outputPath string
+
 	// Pipeline state
 	benchmarkProfileIndex int
 	benchmarkProfiles     []string
+
+	// Final Report
+	suitability *models.SuitabilityReport
 }
 
-func NewModel(modelName string, debug bool) Model {
+func NewModel(modelName string, debug bool, outputPath string) Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -60,6 +67,7 @@ func NewModel(modelName string, debug bool) Model {
 		spinner:           s,
 		modelName:         modelName,
 		debug:             debug,
+		outputPath:        outputPath,
 		step:              StepTelemetry,
 		benchmarkProfiles: []string{"Atomic Check", "Code Generation", "Story Generation", "Summarization", "Reasoning"},
 		results: &models.BenchmarkResult{
@@ -152,6 +160,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.benchmarkProfileIndex++
 		if m.benchmarkProfileIndex >= len(m.benchmarkProfiles) {
 			m.step = StepDone
+			// Run scoring
+			m.suitability = scoring.Evaluate(m.results)
+
+			// If file output is requested, we might want to do it here or in FinalOutput
+			// Let's do it in FinalOutput to keep View pure-ish, but the command runner handles file writing usually.
+			// Actually, the plan said "If output file is specified, write JSON there".
+			// We'll let the Cmd wrapper handle the writing of the string returned by FinalOutput if it is raw JSON.
+
 			return m, tea.Quit
 		}
 		return m, startNextProfileCmd(m.runner, m.modelName, m.benchmarkProfileIndex)
@@ -160,11 +176,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m Model) FinalOutput() string {
+func (m Model) FinalOutput() (string, []byte) {
 	if m.step != StepDone {
-		return ""
+		return "", nil
 	}
-	return generateJSON(m.results, m.sysInfo)
+
+	// Create full report
+	fullReport := models.FullReport{
+		SystemInfo:         m.sysInfo,
+		InferenceResults:   m.results,
+		UseCaseSuitability: m.suitability,
+	}
+
+	jsonBytes, _ := json.MarshalIndent(fullReport, "", "  ")
+
+	// Interactive Output (Visuals) - Always Chart
+	view := RenderChart(m.suitability, m.results)
+
+	return view, jsonBytes
 }
 
 func (m Model) View() string {
@@ -290,15 +319,4 @@ func generateDummyText(tokens int) string {
 		b += base
 	}
 	return b[:needed]
-}
-
-func generateJSON(results *models.BenchmarkResult, sysInfo *models.SystemInfo) string {
-	combined := map[string]interface{}{
-		"system_info":       sysInfo,
-		"inference_results": results,
-		// Suitability and verdict would be calculated here too,
-		// but skipping for now to keep it simple, or migrating logic from main if it existed.
-	}
-	b, _ := json.MarshalIndent(combined, "", "  ")
-	return string(b)
 }

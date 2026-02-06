@@ -73,15 +73,24 @@ type StatsMetric struct {
 	P99    float64 `json:"p99"`
 }
 
-// FullReport is the top-level structure for the JSON output.
-type FullReport struct {
-	SystemInfo         SystemInfo                `json:"system_info"`
-	InferenceResults   BenchmarkResult           `json:"inference_results"`
-	UseCaseSuitability map[string]UseCaseVerdict `json:"use_case_suitability"`
-	OverallVerdict     string                    `json:"overall_verdict"`
+// SuitabilityReport holds the analyzed ratings for each use case.
+type SuitabilityReport struct {
+	QuickQA        Suitability `json:"quick_qa"`
+	Coding         Suitability `json:"coding"`
+	Writing        Suitability `json:"writing"`
+	Summarization  Suitability `json:"summarization"`
+	DataAnalysis   Suitability `json:"data_analysis"`
+	OverallVerdict string      `json:"overall_verdict"`
 }
 
-type UseCaseVerdict struct {
+type Suitability struct {
 	Rating string `json:"rating"` // EXCELLENT, GOOD, MARGINAL, POOR
 	Reason string `json:"reason"`
+}
+
+// FullReport is the top-level structure for the JSON output.
+type FullReport struct {
+	SystemInfo         *SystemInfo        `json:"system_info"`
+	InferenceResults   *BenchmarkResult   `json:"inference_results"`
+	UseCaseSuitability *SuitabilityReport `json:"use_case_suitability"`
 }

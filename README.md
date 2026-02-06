@@ -72,6 +72,16 @@ Ensure Ollama is running (`ollama serve`), then run the benchmark suite:
 }
 ```
 
+## 📈 Understanding the Metrics
+
+The JSON output contains three key performance stats for each benchmark:
+
+| Metric | Full Name | Plain English Explanation |
+| :--- | :--- | :--- |
+| **`ttft_ms`** | Time To First Token | **The "Snappiness" Metric.** How long you wait (in milliseconds) for the model to generate the *very first* word. Lower numbers mean the model feels more responsive. |
+| **`gen_tps`** | Generation Tokens/Sec | **The "Writing Speed" Metric.** How fast the model generates the text of its response. Higher numbers mean long stories or code blocks finish faster. |
+| **`prompt_tps`** | Prompt Processing Tokens/Sec | **The "Reading Speed" Metric.** How fast the model processes your input before it starts thinking. Crucial for summarizing large documents or chatting with long context. |
+
 ## 🏗️ Architecture
 
 See [Architecture.md](./Architecture.md) for the high-level design and dependency graph.
