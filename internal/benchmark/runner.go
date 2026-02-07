@@ -16,13 +16,14 @@ type BenchmarkClient interface {
 
 // Runner executes the benchmark suite.
 type Runner struct {
-	client BenchmarkClient
-	Debug  bool
+	client        BenchmarkClient
+	Debug         bool
+	ContextWindow int
 }
 
 // NewRunner creates a new benchmark runner.
-func NewRunner(client BenchmarkClient) *Runner {
-	return &Runner{client: client, Debug: false}
+func NewRunner(client BenchmarkClient, contextWindow int) *Runner {
+	return &Runner{client: client, Debug: false, ContextWindow: contextWindow}
 }
 
 // RunSuite executes all 5 test profiles.
@@ -34,11 +35,14 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 		},
 	}
 
+	// Collect all load durations across all iterations
+	var allLoadDurations []float64
+
 	// 1. Atomic
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Atomic Check...")
 	}
-	atomicStats, err := r.RunProfile(modelName, ProfileConfig{
+	atomicStats, loadDurs, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 32, Output: 16, Name: "Atomic Check", Iterations: 5,
 		Prompt: "What is the capital of France? Answer in one word.",
 	})
@@ -46,12 +50,13 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 		return nil, fmt.Errorf("atomic profile failed: %w", err)
 	}
 	result.Benchmarks.Atomic = *atomicStats
+	allLoadDurations = append(allLoadDurations, loadDurs...)
 
 	// 2. Code Gen
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Code Generation...")
 	}
-	codeStats, err := r.RunProfile(modelName, ProfileConfig{
+	codeStats, loadDurs, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 80, Output: 256, Name: "Code Generation", Iterations: 5,
 		Prompt: "Write a Python function to find the second largest element in a list.",
 	})
@@ -59,12 +64,13 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 		return nil, err
 	}
 	result.Benchmarks.CodeGen = *codeStats
+	allLoadDurations = append(allLoadDurations, loadDurs...)
 
 	// 3. Story Gen
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Story Generation...")
 	}
-	storyStats, err := r.RunProfile(modelName, ProfileConfig{
+	storyStats, loadDurs, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 50, Output: 400, Name: "Story Generation", Iterations: 5,
 		Prompt: "Write a short story about a robot who discovers nature.",
 	})
@@ -72,12 +78,13 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 		return nil, err
 	}
 	result.Benchmarks.StoryGen = *storyStats
+	allLoadDurations = append(allLoadDurations, loadDurs...)
 
 	// 4. Summarization
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Summarization...")
 	}
-	summStats, err := r.RunProfile(modelName, ProfileConfig{
+	summStats, loadDurs, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 2048, Output: 128, Name: "Summarization", Iterations: 5,
 		Prompt: generateDummyText(2048) + " Summarize the above.",
 	})
@@ -85,12 +92,13 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 		return nil, err
 	}
 	result.Benchmarks.Summarization = *summStats
+	allLoadDurations = append(allLoadDurations, loadDurs...)
 
 	// 5. Reasoning
 	if r.Debug {
 		fmt.Println("[DEBUG] Starting Reasoning...")
 	}
-	reasonStats, err := r.RunProfile(modelName, ProfileConfig{
+	reasonStats, loadDurs, err := r.RunProfile(modelName, ProfileConfig{
 		Input: 100, Output: 150, Name: "Reasoning", Iterations: 5,
 		Prompt: "Solve this math problem step by step: If x=2 and y=3, what is 2x + 3y?",
 	})
@@ -98,6 +106,22 @@ func (r *Runner) RunSuite(modelName string) (*models.BenchmarkResult, error) {
 		return nil, err
 	}
 	result.Benchmarks.Reasoning = *reasonStats
+	allLoadDurations = append(allLoadDurations, loadDurs...)
+
+	// Analyze load durations:
+	// - InitialLoadMs: First iteration load duration (potential cold start)
+	// - SteadyStateLoadMs: Mean of all subsequent iterations
+	if len(allLoadDurations) > 0 {
+		result.InitialLoadMs = allLoadDurations[0] // First iteration is closest to cold start
+
+		if len(allLoadDurations) > 1 {
+			var sum float64
+			for _, d := range allLoadDurations[1:] {
+				sum += d
+			}
+			result.SteadyStateLoadMs = sum / float64(len(allLoadDurations)-1)
+		}
+	}
 
 	return result, nil
 }
@@ -110,19 +134,14 @@ type ProfileConfig struct {
 	Prompt     string
 }
 
-func (r *Runner) RunProfile(model string, cfg ProfileConfig) (*models.ProfileStats, error) {
-	// Warmup
-	if r.Debug {
-		fmt.Printf("[DEBUG] Warmup (1 iteration)...\n")
-	}
-	_, _ = r.client.Generate(GenerateRequest{
-		Model: model, Prompt: cfg.Prompt, Stream: false,
-		Options: map[string]interface{}{"num_predict": 1, "num_ctx": 4096},
-	})
+func (r *Runner) RunProfile(model string, cfg ProfileConfig) (*models.ProfileStats, []float64, error) {
+	// Skip warmup here - cold start is captured at suite level
+	// Each profile just runs iterations with model already warm
 
 	var ttfts []float64
 	var genTPS []float64
 	var promptTPS []float64
+	var loadDurations []float64
 
 	for i := 0; i < cfg.Iterations; i++ {
 		if r.Debug {
@@ -132,12 +151,12 @@ func (r *Runner) RunProfile(model string, cfg ProfileConfig) (*models.ProfileSta
 			Model: model, Prompt: cfg.Prompt, Stream: false,
 			Options: map[string]interface{}{
 				"num_predict": cfg.Output,
-				"num_ctx":     4096,
+				"num_ctx":     r.ContextWindow,
 				"temperature": 0.0,
 			},
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// Calculate metrics
@@ -149,6 +168,7 @@ func (r *Runner) RunProfile(model string, cfg ProfileConfig) (*models.ProfileSta
 		} // sanity
 
 		ttfts = append(ttfts, ttft)
+		loadDurations = append(loadDurations, float64(resp.LoadDuration.Milliseconds()))
 
 		if resp.EvalDuration > 0 {
 			genTPS = append(genTPS, float64(resp.EvalCount)/resp.EvalDuration.Seconds())
@@ -162,11 +182,12 @@ func (r *Runner) RunProfile(model string, cfg ProfileConfig) (*models.ProfileSta
 		Description: cfg.Name,
 		Config:      models.Config{InputTokens: cfg.Input, OutputTokens: cfg.Output},
 		Stats: models.Stats{
-			TTFTMs:    calculateStats(ttfts),
-			GenTPS:    calculateStats(genTPS),
-			PromptTPS: calculateStats(promptTPS),
+			TTFTMs:         calculateStats(ttfts),
+			GenTPS:         calculateStats(genTPS),
+			PromptTPS:      calculateStats(promptTPS),
+			LoadDurationMs: calculateStats(loadDurations),
 		},
-	}, nil
+	}, loadDurations, nil
 }
 
 func calculateStats(values []float64) *models.StatsMetric {

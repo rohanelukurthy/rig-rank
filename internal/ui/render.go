@@ -44,6 +44,22 @@ func RenderReportCard(report *models.SuitabilityReport, result *models.Benchmark
 	borderStyle := lipgloss.NewStyle().Foreground(colorBorder)
 	headerStyle := lipgloss.NewStyle().Foreground(colorInfo)
 
+	// Model Load Summary (Initial vs Steady State)
+	initialLabel := lipgloss.NewStyle().Foreground(colorInfo).Render("Initial Load (1st request):")
+	steadyLabel := lipgloss.NewStyle().Foreground(colorInfo).Render("Steady State (avg):")
+	initialValue := formatMs(result.InitialLoadMs)
+	steadyValue := formatMs(result.SteadyStateLoadMs)
+
+	if result.InitialLoadMs > result.SteadyStateLoadMs*3 && result.SteadyStateLoadMs > 0 {
+		// Initial load is significantly higher - possible cold start or VRAM constraints
+		s.WriteString(lipgloss.NewStyle().Foreground(colorGood).Render("  ⚠️  Model Load: Initial request was slower (possible cold start).") + "\n")
+		s.WriteString(fmt.Sprintf("     %s %s  |  %s %s\n", initialLabel, initialValue, steadyLabel, steadyValue))
+		s.WriteString(lipgloss.NewStyle().Foreground(colorInfo).Render("     (This is normal if the model wasn't recently used)") + "\n\n")
+	} else {
+		s.WriteString(lipgloss.NewStyle().Foreground(colorExcellent).Render("  ✅ Model Load: Model was warm (already loaded).") + "\n")
+		s.WriteString(fmt.Sprintf("     %s %s  |  %s %s\n\n", initialLabel, initialValue, steadyLabel, steadyValue))
+	}
+
 	// Table header
 	topBorder := borderStyle.Render("  ┌────────────────────────────────────────────────────────────────────┐")
 	s.WriteString(topBorder + "\n")

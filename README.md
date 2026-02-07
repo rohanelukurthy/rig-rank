@@ -2,7 +2,20 @@
 
 > **Local LLM Benchmarking & Hardware Suitability Tool**
 
-RigRank is a CLI tool written in Go that evaluates your local hardware capabilities (CPU, GPU, RAM) and benchmarks them against standard Large Language Models (LLMs) running via [Ollama](https://ollama.com). It provides a comprehensive report on whether your "rig" is ready for real-world AI use cases like coding, storytelling, and reasoning.
+RigRank is a CLI tool written in Go that benchmarks how well Large Language Models (LLMs) run on **your specific hardware**. It measures real-world performance metrics via [Ollama](https://ollama.com) and tells you whether your "rig" is ready for AI workloads.
+
+## 🎯 What RigRank Measures (and What It Doesn't)
+
+**RigRank answers:** *"How fast does this model run on MY hardware?"*
+
+| ✅ RigRank Measures | ❌ RigRank Does NOT Measure |
+|---------------------|----------------------------|
+| Tokens per second (throughput) | Model accuracy or intelligence |
+| Time to first token (latency) | Response quality or correctness |
+| Prompt processing speed | Benchmark scores (MMLU, HumanEval, etc.) |
+| Model load times (cold start) | Reasoning or factual correctness |
+
+**Why this distinction matters:** Model quality is hardware-independent — a model's intelligence is the same whether you run it on an M1 MacBook or an RTX 4090. But *performance* varies dramatically based on your CPU, GPU, RAM, and system configuration. RigRank helps you understand what your hardware can actually handle.
 
 ## 🚀 Features
 

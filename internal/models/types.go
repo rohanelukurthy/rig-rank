@@ -30,9 +30,11 @@ type RAM struct {
 
 // BenchmarkResult holds the results of the inference tests.
 type BenchmarkResult struct {
-	MetricsVersion string        `json:"metrics_version"`
-	ModelMetadata  ModelMetadata `json:"model_metadata"`
-	Benchmarks     Benchmarks    `json:"benchmarks"`
+	MetricsVersion    string        `json:"metrics_version"`
+	ModelMetadata     ModelMetadata `json:"model_metadata"`
+	InitialLoadMs     float64       `json:"initial_load_ms"`      // Load duration of first benchmark iteration
+	SteadyStateLoadMs float64       `json:"steady_state_load_ms"` // Mean load duration of subsequent iterations
+	Benchmarks        Benchmarks    `json:"benchmarks"`
 }
 
 type ModelMetadata struct {
@@ -65,6 +67,7 @@ type Stats struct {
 	GenTPS          *StatsMetric `json:"gen_tps,omitempty"`
 	PromptTPS       *StatsMetric `json:"prompt_tps,omitempty"`
 	TotalDurationMs *StatsMetric `json:"total_duration_ms,omitempty"`
+	LoadDurationMs  *StatsMetric `json:"load_duration_ms,omitempty"`
 }
 
 type StatsMetric struct {

@@ -10,9 +10,10 @@ import (
 )
 
 type runOptions struct {
-	model  string
-	debug  bool
-	output string
+	model         string
+	debug         bool
+	output        string
+	contextWindow int
 }
 
 func newRunCmd() *cobra.Command {
@@ -30,6 +31,7 @@ func newRunCmd() *cobra.Command {
 	flags.StringVarP(&opts.model, "model", "m", "llama3", "Ollama model name to benchmark")
 	flags.BoolVarP(&opts.debug, "debug", "d", false, "Enable verbose debug logging")
 	flags.StringVarP(&opts.output, "output", "o", "", "Path to save JSON results")
+	flags.IntVarP(&opts.contextWindow, "context-window", "c", 4096, "Context window size for the model")
 
 	return cmd
 }
@@ -37,7 +39,7 @@ func newRunCmd() *cobra.Command {
 func runBenchmark(opts runOptions) {
 	// 3. Output
 	// Use Stderr for TUI so we can pipe JSON from Stdout
-	p := tea.NewProgram(ui.NewModel(opts.model, opts.debug, opts.output), tea.WithOutput(os.Stderr))
+	p := tea.NewProgram(ui.NewModel(opts.model, opts.debug, opts.output, opts.contextWindow), tea.WithOutput(os.Stderr))
 	m, err := p.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Alas, there's been an error: %v\n", err)

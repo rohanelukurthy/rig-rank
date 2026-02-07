@@ -48,7 +48,8 @@ type Model struct {
 	err error
 
 	// Config
-	outputPath string
+	outputPath    string
+	contextWindow int
 
 	// Pipeline state
 	benchmarkProfileIndex int
@@ -58,7 +59,7 @@ type Model struct {
 	suitability *models.SuitabilityReport
 }
 
-func NewModel(modelName string, debug bool, outputPath string) Model {
+func NewModel(modelName string, debug bool, outputPath string, contextWindow int) Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -68,6 +69,7 @@ func NewModel(modelName string, debug bool, outputPath string) Model {
 		modelName:         modelName,
 		debug:             debug,
 		outputPath:        outputPath,
+		contextWindow:     contextWindow,
 		step:              StepTelemetry,
 		benchmarkProfiles: []string{"Atomic Check", "Code Generation", "Story Generation", "Summarization", "Reasoning"},
 		results: &models.BenchmarkResult{
@@ -132,7 +134,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.client = msg.client
-		m.runner = benchmark.NewRunner(m.client)
+		m.runner = benchmark.NewRunner(m.client, m.contextWindow)
 		m.runner.Debug = m.debug
 		m.step = StepBenchmark
 		return m, startNextProfileCmd(m.runner, m.modelName, m.benchmarkProfileIndex)
@@ -306,7 +308,7 @@ func startNextProfileCmd(runner *benchmark.Runner, modelName string, index int) 
 			}
 		}
 
-		stats, err := runner.RunProfile(modelName, cfg)
+		stats, _, err := runner.RunProfile(modelName, cfg)
 		return benchmarkProfileMsg{profileName: cfg.Name, stats: stats, err: err}
 	}
 }
