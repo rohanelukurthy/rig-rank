@@ -15,7 +15,7 @@ RigRank is a CLI tool written in Go that benchmarks how well Large Language Mode
 | Prompt processing speed | Benchmark scores (MMLU, HumanEval, etc.) |
 | Model load times (cold start) | Reasoning or factual correctness |
 
-**Why this distinction matters:** Model quality is hardware-independent — a model's intelligence is the same whether you run it on an M1 MacBook or an RTX 4090. But *performance* varies dramatically based on your CPU, GPU, RAM, and system configuration. RigRank helps you understand what your hardware can actually handle.
+**Why this distinction matters:** Local LLMs aren't 'one size fits all.' Depending on your CPU, GPU, and RAM, you might be forced to trade model intelligence (quantization) for usable speed. RigRank provides the telemetry you need to navigate these constraints, helping you find the perfect balance between reasoning depth and desktop snappiness.
 
 ## 🚀 Features
 
