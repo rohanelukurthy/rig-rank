@@ -88,5 +88,11 @@ func getGPUInfo(g *models.GPU) error {
 		g.Model = card.DeviceInfo.Product.Name
 		break
 	}
+
+	// On Linux, query nvidia-smi for VRAM, PCIe gen, and lane count
+	if runtime.GOOS == "linux" {
+		_ = getLinuxNvidiaInfo(g) // ignore error, same pattern as GPU handling above
+	}
+
 	return nil
 }

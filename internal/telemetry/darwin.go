@@ -84,3 +84,8 @@ func getMacOSGPUInfo(g *models.GPU) error {
 
 	return nil
 }
+
+func getLinuxNvidiaInfo(g *models.GPU) error {
+	// No-op on darwin (not Linux)
+	return nil
+}
