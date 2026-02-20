@@ -22,7 +22,7 @@ builds:
         goarch: arm64 # Windows ARM64 is less common, skip to save time unless requested
 
 archives:
-  - format: tar.gz
+  - formats: ['tar.gz']
     # this name template makes the OS and Arch show up in the name
     name_template: >-
       {{ .ProjectName }}_
@@ -32,7 +32,7 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ['zip']
 
 checksum:
   name_template: 'checksums.txt'
