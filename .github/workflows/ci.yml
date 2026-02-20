@@ -27,15 +27,8 @@ jobs:
         run: go mod verify
 
       - name: Build RigRank
-        run: go build -o rigrank ./cmd/rigrank
+        run: go build -o rigrank${{ matrix.os == 'windows-latest' && '.exe' || '' }} ./cmd/rigrank
 
       - name: Run RigRank (Help Command)
-        # On Windows, we need to explicitly run the executable
-        # On Linux/macOS, we use ./rigrank
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            ./rigrank.exe --help
-          else
-            ./rigrank --help
-          fi
+        run: ./rigrank${{ matrix.os == 'windows-latest' && '.exe' || '' }} --help
         shell: bash
