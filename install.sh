@@ -55,30 +55,15 @@ if [ ! -f "$TMP_DIR/$BIN_NAME" ]; then
     exit 1
 fi
 
-echo "Installing $BIN_NAME..."
+echo "Installing $BIN_NAME to current directory..."
 
-# Try placing in /usr/local/bin, fallback to ~/bin or current dir
-INSTALL_DIR="/usr/local/bin"
-
-if [ -w "$INSTALL_DIR" ] || sudo -n true 2>/dev/null; then
-    # We have write access (or can sudo)
-    if [ ! -w "$INSTALL_DIR" ]; then
-        echo "Requires sudo privileges to install to $INSTALL_DIR..."
-        sudo mv "$TMP_DIR/$BIN_NAME" "$INSTALL_DIR/$BIN_NAME"
-    else
-        mv "$TMP_DIR/$BIN_NAME" "$INSTALL_DIR/$BIN_NAME"
-    fi
-    chmod +x "$INSTALL_DIR/$BIN_NAME"
-    echo "Successfully installed to $INSTALL_DIR/$BIN_NAME"
-else
-    # Fallback to current directory
-    mv "$TMP_DIR/$BIN_NAME" "./$BIN_NAME"
-    chmod +x "./$BIN_NAME"
-    echo "Could not write to $INSTALL_DIR. Binary has been placed in the current directory."
-    echo "Ensure it is in your PATH, or run it with ./$BIN_NAME"
-fi
+# Move to current directory
+mv "$TMP_DIR/$BIN_NAME" "./$BIN_NAME"
+chmod +x "./$BIN_NAME"
 
 # Cleanup
 rm -rf "$TMP_DIR"
 
-echo "RigRank installation complete! Run '$BIN_NAME --help' to get started."
+echo "RigRank installation complete!"
+echo "The binary has been placed in your current directory."
+echo "Run './$BIN_NAME --help' to get started."

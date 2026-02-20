@@ -65,28 +65,13 @@ if (-not (Test-Path $extractedExe)) {
     Exit
 }
 
-Write-Host "Installing $binName..."
+Write-Host "Installing $binName to current directory..."
 
-# Install Location
-$installDir = Join-Path $env:USERPROFILE ".rigrank\bin"
-if (-not (Test-Path $installDir)) {
-    New-Item -ItemType Directory -Force -Path $installDir | Out-Null
-}
-
-$targetExe = Join-Path $installDir $binName
+$targetExe = Join-Path (Get-Location) $binName
 Move-Item -Path $extractedExe -Destination $targetExe -Force
-
-# Add to User PATH if not already present
-$userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
-if ($userPath -notmatch [regex]::Escape($installDir)) {
-    Write-Host "Adding $installDir to user PATH..."
-    $newPath = "$userPath;$installDir"
-    [Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
-    Write-Host "PATH updated. You may need to restart your terminal to use 'rigrank' globally." -ForegroundColor Yellow
-}
 
 # Cleanup
 Remove-Item -Path $tempDir -Recurse -Force
 
 Write-Host "RigRank installation complete! The binary is located at $targetExe." -ForegroundColor Green
-Write-Host "Run 'rigrank --help' to get started."
+Write-Host "Run '.\$binName --help' to get started."
