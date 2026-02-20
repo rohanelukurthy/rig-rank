@@ -31,13 +31,32 @@ RigRank is a CLI tool written in Go that benchmarks how well Large Language Mode
 
 ## 🛠️ Prerequisites
 
--   **Go 1.25+** (for building from source)
 -   **Ollama**: Must be installed and running (`ollama serve`).
 -   **Models**: You need at least one model pulled (e.g., `llama3`, `gemma:2b`).
+-   *(Optional)* **Go 1.25+** (only if building from source).
 
 ## 📦 Installation
 
-To install `rigrank` from source:
+**The easiest way to install RigRank is to use the installation script.**
+
+### macOS / Linux
+Open your terminal and run:
+```bash
+curl -sL https://raw.githubusercontent.com/rohanelukurthy/rig-rank/main/install.sh | bash
+```
+
+### Windows (PowerShell)
+Open PowerShell and run:
+```powershell
+irm https://raw.githubusercontent.com/rohanelukurthy/rig-rank/main/install.ps1 | iex
+```
+
+### Alternative Methods
+If you prefer not to use the installation scripts, you can download the pre-built binaries directly from the [Releases](https://github.com/rohanelukurthy/rig-rank/releases) page.
+
+### Building from Source
+
+If you prefer to compile RigRank yourself or are developing features:
 
 ```bash
 git clone https://github.com/rohanelukurthy/rig-rank.git

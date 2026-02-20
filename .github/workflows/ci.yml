@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-compile-and-run:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Build RigRank
+        run: go build -o rigrank ./cmd/rigrank
+
+      - name: Run RigRank (Help Command)
+        # On Windows, we need to explicitly run the executable
+        # On Linux/macOS, we use ./rigrank
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            ./rigrank.exe --help
+          else
+            ./rigrank --help
+          fi
+        shell: bash
