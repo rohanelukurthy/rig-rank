@@ -8,6 +8,7 @@ echo "Retrieving latest version of RigRank..."
 
 # Get OS and Architecture
 OS=$(uname | tr '[:upper:]' '[:lower:]')
+OS_TITLE=$(uname)
 ARCH=$(uname -m)
 
 if [ "$ARCH" = "x86_64" ]; then
@@ -32,7 +33,7 @@ fi
 echo "Downloading $BIN_NAME $LATEST_TAG ($OS-$ARCH)..."
 
 # Construct the download URL based on goreleaser name_template
-TAR_NAME="${BIN_NAME}_${OS^}_${ARCH}.tar.gz"
+TAR_NAME="rig-rank_${OS_TITLE}_${ARCH}.tar.gz"
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/$LATEST_TAG/$TAR_NAME"
 
 # Download to a temporary location

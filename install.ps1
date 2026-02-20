@@ -31,7 +31,7 @@ Try {
 Write-Host "Downloading $binName $tag (Windows-$archStr)..."
 
 # Construct download URL (Note: Windows uses .zip in goreleaser overrides)
-$zipName = "rigrank_Windows_$archStr.zip"
+$zipName = "rig-rank_Windows_$archStr.zip"
 $downloadUrl = "https://github.com/$repo/releases/download/$tag/$zipName"
 
 $tempDir = Join-Path $env:TEMP "rigrank-install"
