@@ -1,4 +1,9 @@
-# RigRank
+# RigRank: Local LLM Benchmarking & Hardware Suitability CLI
+
+[![Build Status](https://github.com/rohanelukurthy/rig-rank/actions/workflows/ci.yml/badge.svg)](https://github.com/rohanelukurthy/rig-rank/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/rohanelukurthy/rig-rank)](https://github.com/rohanelukurthy/rig-rank/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rohanelukurthy/rig-rank)](https://goreportcard.com/report/github.com/rohanelukurthy/rig-rank)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Local LLM Benchmarking & Hardware Suitability Tool**
 
