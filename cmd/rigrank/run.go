@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/rohanelukurthy/rig-rank/internal/telemetry"
 	"github.com/rohanelukurthy/rig-rank/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +16,11 @@ type runOptions struct {
 	debug         bool
 	output        string
 	contextWindow int
+	quietWait     bool
+	quietCPU      float64
+	quietRAMMB    uint64
+	quietTimeout  int
+	quietWaitSecs int
 }
 
 func newRunCmd() *cobra.Command {
@@ -33,13 +40,26 @@ func newRunCmd() *cobra.Command {
 	flags.StringVarP(&opts.output, "output", "o", "", "Path to save JSON results")
 	flags.IntVarP(&opts.contextWindow, "context-window", "c", 4096, "Context window size for the model")
 
+	flags.BoolVar(&opts.quietWait, "quiet-wait", false, "Wait for system to become idle before benchmarking")
+	flags.Float64Var(&opts.quietCPU, "quiet-cpu", 15.0, "Maximum CPU usage percentage allowed during quiet wait")
+	flags.Uint64Var(&opts.quietRAMMB, "quiet-ram-mb", 2048, "Minimum free RAM (MB) required during quiet wait")
+	flags.IntVar(&opts.quietTimeout, "quiet-timeout", 60, "Timeout in seconds to wait for quiet state")
+	flags.IntVar(&opts.quietWaitSecs, "quiet-wait-secs", 5, "Duration in seconds of sustained quiet state required")
+
 	return cmd
 }
 
 func runBenchmark(opts runOptions) {
 	// 3. Output
-	// Use Stderr for TUI so we can pipe JSON from Stdout
-	p := tea.NewProgram(ui.NewModel(opts.model, opts.debug, opts.output, opts.contextWindow), tea.WithOutput(os.Stderr))
+
+	quietCfg := telemetry.QuietStateConfig{
+		Timeout:      time.Duration(opts.quietTimeout) * time.Second,
+		WaitDuration: time.Duration(opts.quietWaitSecs) * time.Second,
+		CPUThreshold: opts.quietCPU,
+		RAMMinFreeMB: opts.quietRAMMB,
+	}
+
+	p := tea.NewProgram(ui.NewModel(opts.model, opts.debug, opts.output, opts.contextWindow, opts.quietWait, quietCfg), tea.WithOutput(os.Stderr))
 	m, err := p.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Alas, there's been an error: %v\n", err)

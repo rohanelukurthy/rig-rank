@@ -26,7 +26,8 @@ var (
 type ValidationStep int
 
 const (
-	StepTelemetry ValidationStep = iota
+	StepQuietState ValidationStep = iota
+	StepTelemetry
 	StepHealthCheck
 	StepBenchmark
 	StepDone
@@ -57,29 +58,51 @@ type Model struct {
 
 	// Final Report
 	suitability *models.SuitabilityReport
+
+	// Quiet State
+	quietWait      bool
+	quietCfg       telemetry.QuietStateConfig
+	quietStatusMsg string
+	quietUpdateCh  chan string
 }
 
-func NewModel(modelName string, debug bool, outputPath string, contextWindow int) Model {
+func NewModel(modelName string, debug bool, outputPath string, contextWindow int, quietWait bool, quietCfg telemetry.QuietStateConfig) Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
-	return Model{
+	m := Model{
 		spinner:           s,
 		modelName:         modelName,
 		debug:             debug,
 		outputPath:        outputPath,
 		contextWindow:     contextWindow,
-		step:              StepTelemetry,
+		quietWait:         quietWait,
+		quietCfg:          quietCfg,
+		quietStatusMsg:    "Initializing quiet state monitoring...",
+		quietUpdateCh:     make(chan string),
+		step:              StepQuietState,
 		benchmarkProfiles: []string{"Atomic Check", "Code Generation", "Story Generation", "Summarization", "Reasoning"},
 		results: &models.BenchmarkResult{
 			MetricsVersion: "1.0",
 			ModelMetadata:  models.ModelMetadata{Name: modelName},
 		},
 	}
+
+	if !quietWait {
+		m.step = StepTelemetry
+	}
+	return m
 }
 
 func (m Model) Init() tea.Cmd {
+	if m.quietWait {
+		return tea.Batch(
+			m.spinner.Tick,
+			waitForQuietStateUpdateCmd(m.quietUpdateCh),
+			runQuietStateCmd(m.quietCfg, m.quietUpdateCh),
+		)
+	}
 	return tea.Batch(
 		m.spinner.Tick,
 		gatherTelemetryCmd(),
@@ -103,6 +126,9 @@ type benchmarkProfileMsg struct {
 	err         error
 }
 
+type quietStateUpdateMsg string
+type quietStateDoneMsg struct{ err error }
+
 type finishedMsg struct{}
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -118,6 +144,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
+
+	case quietStateUpdateMsg:
+		m.quietStatusMsg = string(msg)
+		if m.quietUpdateCh != nil {
+			return m, waitForQuietStateUpdateCmd(m.quietUpdateCh)
+		}
+		return m, nil
+
+	case quietStateDoneMsg:
+		if msg.err != nil {
+			m.err = msg.err
+			return m, tea.Quit
+		}
+		m.step = StepTelemetry
+		m.quietUpdateCh = nil
+		return m, gatherTelemetryCmd()
 
 	case telemetryMsg:
 		if msg.err != nil {
@@ -206,6 +248,15 @@ func (m Model) View() string {
 	s := strings.Builder{}
 	s.WriteString(fmt.Sprintf("\n%s\n\n", titleStyle.Render("RigRank Benchmark")))
 
+	// 0. Quiet State
+	if m.quietWait {
+		if m.step == StepQuietState {
+			s.WriteString(fmt.Sprintf("%s %s\n", m.spinner.View(), m.quietStatusMsg))
+		} else {
+			s.WriteString(fmt.Sprintf("%s System Quiet State Validated\n", checkMark))
+		}
+	}
+
 	// 1. Telemetry
 	if m.sysInfo != nil {
 		s.WriteString(fmt.Sprintf("%s System Telemetry Clean\n", checkMark))
@@ -252,6 +303,29 @@ func (m Model) View() string {
 }
 
 // Commands
+
+func runQuietStateCmd(cfg telemetry.QuietStateConfig, updateCh chan string) tea.Cmd {
+	return func() tea.Msg {
+		err := telemetry.WaitForQuietState(cfg, func(msg string) {
+			updateCh <- msg
+		})
+		close(updateCh)
+		return quietStateDoneMsg{err: err}
+	}
+}
+
+func waitForQuietStateUpdateCmd(ch chan string) tea.Cmd {
+	return func() tea.Msg {
+		if ch == nil {
+			return nil
+		}
+		msg, ok := <-ch
+		if !ok {
+			return nil
+		}
+		return quietStateUpdateMsg(msg)
+	}
+}
 
 func gatherTelemetryCmd() tea.Cmd {
 	return func() tea.Msg {
