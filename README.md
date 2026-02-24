@@ -82,6 +82,12 @@ Ensure Ollama is running (`ollama serve`), then run the benchmark suite:
 
 # Run with debug logging enabled
 ./rigrank run --model mistral --debug
+
+# Run and wait for system to be idle first
+./rigrank run --model phi3 --quiet-wait
+
+# Run and save results to a JSON file
+./rigrank run --model qwen2:7b --output results.json
 ```
 
 ### Options
@@ -89,7 +95,14 @@ Ensure Ollama is running (`ollama serve`), then run the benchmark suite:
 | Flag | Shorthand | Description | Default |
 | :--- | :--- | :--- | :--- |
 | `--model` | `-m` | Ollama model name to benchmark | `llama3` |
+| `--context-window` | `-c` | Context window size for the model | `4096` |
+| `--output` | `-o` | Path to save JSON results | |
 | `--debug` | `-d` | Enable verbose debug logging | `false` |
+| `--quiet-wait` | | Wait for system to become idle before benchmarking | `false` |
+| `--quiet-cpu` | | Maximum CPU usage percentage allowed during quiet wait | `15` |
+| `--quiet-ram-mb` | | Minimum free RAM (MB) required during quiet wait | `2048` |
+| `--quiet-timeout` | | Timeout in seconds to wait for quiet state | `60` |
+| `--quiet-wait-secs` | | Duration in seconds of sustained quiet state required | `5` |
 | `--help` | `-h` | Show help for command | |
 
 ## 📊 Output Example
